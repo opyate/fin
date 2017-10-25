@@ -1,0 +1,44 @@
+(page "index.html"
+      (:require-macros [cljs.core.async.macros :refer [go go-loop]])
+      (:require [cljs.core.async :refer [put! chan <! >! timeout close!]]
+                [goog.labs.format.csv :as csv]))
+
+(def first-file
+  (map (fn [e]
+         (let [target (.-currentTarget e)
+               file (-> target .-files (aget 0))]
+           (set! (.-value target) "")
+           file))))
+
+(def extract-result
+  (map #(-> % .-target .-result csv/parse js->clj)))
+
+(def upload-reqs (chan 1 first-file))
+(def file-reads (chan 1 extract-result))
+
+(defn put-upload [e]
+  (put! upload-reqs e))
+
+(go-loop []
+  (let [reader (js/FileReader.)
+        file (<! upload-reqs)]
+    (print (str "filename" (.-name file)))
+    (set! (.-onload reader) #(put! file-reads %))
+    (.readAsText reader file)
+    (recur)))
+
+(go-loop []
+  (let [data (<! file-reads)]
+    (print (str "data", data)))
+  (recur))
+
+(html
+  (head
+    (link :href "app.css" :rel "stylesheet" :type "text/css"))
+  (body
+   (h1 "Fin")
+    (p "Choose a CSV file")
+    (input :type "file" :accept ".csv" :change put-upload)))
+
+
+
