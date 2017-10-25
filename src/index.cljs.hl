@@ -43,12 +43,13 @@
     (set! (.-onload reader) #(put! file-reads %))
     (.readAsText reader file)
     (recur)))
-(def counter (atom 0))
+
 (go-loop []
-  (let [data (<! file-reads)]
-    (doseq [datum data]
-      (idx/add-item @db store-name {:date "the-date" :description "aaa" :amount @counter} #(println "Successfully added datum!"))
-      (swap! counter inc)))
+  (let [data (<! file-reads)
+        [header & rest] data]
+    (println (str "header " header))
+    (doseq [datum rest]
+      (idx/add-item @db store-name {:date (get datum 0) :description (get datum 1) :amount (get datum 2)} #(println (str "storing " datum)))))
   (recur))
 
 (html
