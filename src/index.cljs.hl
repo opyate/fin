@@ -1,7 +1,24 @@
 (page "index.html"
       (:require-macros [cljs.core.async.macros :refer [go go-loop]])
       (:require [cljs.core.async :refer [put! chan <! >! timeout close!]]
-                [goog.labs.format.csv :as csv]))
+                [goog.labs.format.csv :as csv]
+                [cljs-idxdb.core :as idx]))
+
+;; channel-based architecture credits https://mrmcc3.github.io/post/csv-with-clojurescript/
+
+(def db (atom nil))
+(def store-name "fin")
+(def keypath ["date" "description" "amount"])
+
+(idx/create-db "txs" 1
+               #(->
+                 (idx/delete-and-create-store % store-name {:autoIncrement true})
+                 
+                 ;(idx/create-index "dateIdx" "date" {:unique false})
+                 ;(idx/create-index "descriptionIdx" "description" {:unique false})
+                 ;(idx/create-index "amountIdx" "amount" {:unique false})
+                 )
+               #(reset! db %))
 
 (def first-file
   (map (fn [e]
@@ -26,10 +43,12 @@
     (set! (.-onload reader) #(put! file-reads %))
     (.readAsText reader file)
     (recur)))
-
+(def counter (atom 0))
 (go-loop []
   (let [data (<! file-reads)]
-    (print (str "data", data)))
+    (doseq [datum data]
+      (idx/add-item @db store-name {:date "the-date" :description "aaa" :amount @counter} #(println "Successfully added datum!"))
+      (swap! counter inc)))
   (recur))
 
 (html

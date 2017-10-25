@@ -5,6 +5,7 @@
                   [org.clojure/clojure       "1.8.0"]
                   [org.clojure/core.async    "0.3.443"]
                   [org.clojure/clojurescript "1.9.293"]
+                  [cljs-idxdb "0.1.0"]
                   [tailrecursion/boot-jetty  "0.1.3"]]
   :source-paths #{"src"}
   :asset-paths  #{"assets"})
