@@ -8,18 +8,20 @@
 ;; channel-based architecture credits https://mrmcc3.github.io/post/csv-with-clojurescript/
 
 (def db (atom nil))
-(def store-name "fin")
+(def store-txs "transactions")
+(def store-tags "tags")
 
-(idx/create-db "txs" 1
+(idx/create-db "fin" 1
                #(->
-                 (idx/delete-and-create-store % store-name {:autoIncrement true})
+                 (do
 
-                 ;(idx/create-index "dateIdx" "date" {:unique false})
-                 ;(idx/create-index "descriptionIdx" "description" {:unique false})
-                 ;(idx/create-index "amountIdx" "amount" {:unique false})
-                 )
+                   (idx/delete-and-create-store % store-txs {:autoIncrement true})
+                   (idx/delete-and-create-store % store-tags {:autoIncrement true})))
                #(reset! db %))
 
+;;(idx/create-index "dateIdx" "date" {:unique false})
+;;(idx/create-index "descriptionIdx" "description" {:unique false})
+;;(idx/create-index "amountIdx" "amount" {:unique false})
 (def first-file
   (map (fn [e]
          (let [target (.-currentTarget e)
@@ -36,6 +38,7 @@
 (defn put-upload [e]
   (put! upload-reqs e))
 
+;; a loop to write to file-reads
 (go-loop []
   (let [reader (js/FileReader.)
         file (<! upload-reqs)]
@@ -44,12 +47,13 @@
     (.readAsText reader file)
     (recur)))
 
+;; a loop to read from file-reads
 (go-loop []
   (let [data (<! file-reads)
         [header & rest] data]
     ;(println (str "header " header))
     (doseq [datum rest]
-      (idx/add-item @db store-name {:date (get datum 0) :description (get datum 1) :amount (get datum 2)} #(println (str "storing " datum)))))
+      (idx/add-item @db store-txs {:date (get datum 0) :description (get datum 1) :amount (get datum 2)} #(println (str "storing " datum)))))
   (recur))
 
 (def transactions (cell #{}))
@@ -66,7 +70,7 @@
     (swap! transactions conj (render tx))
     ))
 (defn fetch-and-render []
-  (idx/get-all @db store-name fetch))
+  (idx/get-all @db store-txs fetch))
 
 (html
   (head
