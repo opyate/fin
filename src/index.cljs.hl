@@ -2,6 +2,7 @@
       (:require-macros [cljs.core.async.macros :refer [go go-loop]])
       (:require [cljs.core.async :refer [put! chan <! >! timeout close!]]
                 [goog.labs.format.csv :as csv]
+                [clojure.string :as string]
                 [cljs-idxdb.core :as idx]))
 
 ;; channel-based architecture credits https://mrmcc3.github.io/post/csv-with-clojurescript/
@@ -51,23 +52,21 @@
       (idx/add-item @db store-name {:date (get datum 0) :description (get datum 1) :amount (get datum 2)} #(println (str "storing " datum)))))
   (recur))
 
-;;(def transactions (cell #{{:description "dummy desc" :amount "1337" :date "17/11/1979"}}))
 (def transactions (cell #{}))
 
 (defelem transaction-list [{:keys [from sorted-by] :or {sorted-by identity}}]
   (loop-tpl :bindings [transaction (cell= (sort-by sorted-by from))]
             (li (span (cell= (str transaction)))
-                )))
-;;(button :click #(swap! from disj @transaction) "Delete")
+                (button :click #(swap! from disj @transaction) "Delete"))))
 
-(defn parse [txs]
+(defn render [{:keys [description amount date] :as tx}]
+  (str date " " description " " amount))
+(defn fetch [txs]
   (doseq [tx txs]
-    (println (str "read tx " tx))
-    ;; this is broken:
-    (swap! transactions conj tx)
+    (swap! transactions conj (render tx))
     ))
-(defn read []
-  (idx/get-all @db store-name parse))
+(defn fetch-and-render []
+  (idx/get-all @db store-name fetch))
 
 (html
   (head
@@ -76,7 +75,7 @@
    (h1 "Fin")
     (p "Choose a CSV file")
     (input :type "file" :accept ".csv" :change put-upload)
-    (button :click read "Read")
+    (button :click fetch-and-render "Read")
     (ul (transaction-list :from transactions ))))
 
 
