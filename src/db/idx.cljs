@@ -70,7 +70,6 @@
   (log e))
 
 (defn delete-store [db name]
-  (println db name (.-objectStoreNames db))
   (when (.. (.-objectStoreNames db) (contains name))
     (.. db (deleteObjectStore name))))
 

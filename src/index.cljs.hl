@@ -10,7 +10,7 @@
 (def ^:dynamic db nil)
 (defn save-db [{db-obj :db}]
   (println "DB bootstrapped!")
-  (def db db-obj))
+  (set! db db-obj))
 
 (def store-txs "transactions")
 (def store-tags "tags")
@@ -26,15 +26,15 @@
         ;;(idxdb/create-index "amountIdx" "amount" {:unique false})
     ))
 
-(declare ^:dynamic db-ref)
-
+(defn error-prn [& args] (println "Error: " args))
+;; sub is a hoplon tag, so fully qualify cljs.core.async/sub
 (defn init-db []
   (let [
         [_ ch] (idxdb/request-db "fin" 1 db-schema)
-        success-chan (sub ch :success (chan))
-        error-chan (sub ch :error (chan))]
+        success-chan (cljs.core.async/sub ch :success (chan))
+        error-chan (cljs.core.async/sub ch :error (chan))]
     (go (-> (<! success-chan) save-db))
-    (go (-> (<! error-chan) println))))
+    (go (-> (<! error-chan) error-prn))))
 
 (init-db)
 
@@ -63,7 +63,6 @@
     (.readAsText reader file)
     (recur)))
 
-;; 
 ;; a loop to read from file-reads
 (go-loop []
   (let [data (<! file-reads)
