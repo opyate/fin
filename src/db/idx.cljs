@@ -87,10 +87,14 @@
   Takes the following options:
   - :key-path - the path to the key for the objects in the store, either as a single key name, or as a vector that describes a path to the key
   - :auto-increment - does the object store have a key generator?"
-  [db store-name & {:as opts}]
+  [db store-name opts]
   (let [key-path (:key-path opts [])
         key-path-str (key-path->str key-path)]
-    (.. db (createObjectStore store-name #js {:keyPath key-path-str :autoIncrement (:auto-increment opts)}))))
+    (if (empty? key-path-str)
+      (.. db (createObjectStore store-name #js {:autoIncrement (:auto-increment opts)}))
+      (.. db (createObjectStore store-name #js {:keyPath key-path-str :autoIncrement (:auto-increment opts)}))
+      )
+    ))
 
 
 (defn delete-and-create-store [db name & {:as opts}]

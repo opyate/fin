@@ -17,8 +17,8 @@
 
 (defn db-schema [db-ref]
   (let [
-        txstore (idxdb/delete-and-create-store db-ref store-txs {:autoIncrement true})
-        tagstore (idxdb/delete-and-create-store db-ref store-tags {:autoIncrement true})]
+        txstore (idxdb/delete-and-create-store db-ref store-txs {:auto-increment true})
+        tagstore (idxdb/delete-and-create-store db-ref store-tags {:auto-increment true})]
 
         ;; create indexes
         ;;(idxdb/create-index "dateIdx" "date" {:unique false})
@@ -72,7 +72,7 @@
       (let [payload {:date (get datum 0) :description (get datum 1) :amount (get datum 2)}
             sefn #(println (str "storing " datum " outcome " %))
             ]
-        (idxdb/add-item @db store-txs payload sefn sefn)
+        (idxdb/add-item db store-txs payload sefn sefn)
         )
       ))
   (recur))
@@ -90,7 +90,7 @@
 
 (defn load []
   (go
-    (doseq [tx (<! (idxdb/get-all-from @db store-txs 1 :keywordize-keys true))]
+    (doseq [tx (<! (idxdb/get-all-from db store-txs 1 :keywordize-keys true))]
         ;;(swap! transactions conj (str tx))
          (println (str "type of  tx  is " tx))
         ;;(let [ttx (cell= tx)]
