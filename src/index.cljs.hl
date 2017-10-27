@@ -70,41 +70,31 @@
     ;(println (str "header " header))
     (doseq [datum rest]
       (let [payload {:date (get datum 0) :description (get datum 1) :amount (get datum 2)}
-            sefn #(println (str "storing " datum " outcome " %))
-            ]
-        (idxdb/add-item db store-txs payload sefn sefn)
-        )
-      ))
+            sefn #(println (str "storing " datum " outcome " %))]
+        (idxdb/add-item db store-txs payload sefn sefn))))
   (recur))
 
+;; placeholder for reading transactions from db
 (def transactions (cell #{}))
 
-(defn render [tx]
+(defn render-tx [tx]
   (let [amount (:amount tx)
         description (:description tx)
         date (:date tx)]
-    ;(str date " " description " " amount)
-    ;;(str transaction-str)
     (span :class "tx"
      (em date)
      (span description)
-     (strong amount)
-     )
-    ))
+     (strong amount))))
 (defelem transaction-list [{:keys [from]}]
   (loop-tpl :bindings [transaction (cell= from)]
     (li
-      (span (cell= (render transaction)))
+      (span (cell= (render-tx transaction)))
         (button :click #(swap! from disj @transaction) "Delete"))))
 
 (defn load []
   (go
     (doseq [tx (<! (idxdb/get-all-from db store-txs 1 :keywordize-keys true))]
-        (swap! transactions conj tx)
-        )
-    )
-  (println "transactions cell is now " (cell= transactions))
- )
+        (swap! transactions conj tx))))
 
 (html
   (head
