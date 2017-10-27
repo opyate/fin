@@ -79,24 +79,31 @@
 
 (def transactions (cell #{}))
 
-(defn render [transaction-str]
-  (let [[date description amount :as parts] (string/split transaction-str #"\s+")]
+(defn render [tx]
+  (let [amount (:amount tx)
+        description (:description tx)
+        date (:date tx)]
     ;(str date " " description " " amount)
-    (str transaction-str)))
-(defelem transaction-list [{:keys [from sorted-by] :or {sorted-by identity}}]
-  (loop-tpl :bindings [transaction (cell= (sort-by sorted-by from))]
-            (li (span (cell= (render transaction)))
-                (button :click #(swap! from disj @transaction) "Delete"))))
+    ;;(str transaction-str)
+    (span :class "tx"
+     (em date)
+     (span description)
+     (strong amount)
+     )
+    ))
+(defelem transaction-list [{:keys [from]}]
+  (loop-tpl :bindings [transaction (cell= from)]
+    (li
+      (span (cell= (render transaction)))
+        (button :click #(swap! from disj @transaction) "Delete"))))
 
 (defn load []
   (go
     (doseq [tx (<! (idxdb/get-all-from db store-txs 1 :keywordize-keys true))]
-        ;;(swap! transactions conj (str tx))
-         (println (str "type of  tx  is " tx))
-        ;;(let [ttx (cell= tx)]
-        ;;  (swap! transactions conj @ttx))
+        (swap! transactions conj tx)
         )
     )
+  (println "transactions cell is now " (cell= transactions))
  )
 
 (html
@@ -107,7 +114,7 @@
     (p "Choose a CSV file")
     (input :type "file" :accept ".csv" :change put-upload)
     (button :click load "Read")
-    ;;(ul (transaction-list :from transactions ))
+    (ul (transaction-list :from transactions ))
     ))
 
 
