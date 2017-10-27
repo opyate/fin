@@ -3,25 +3,41 @@
       (:require [cljs.core.async :refer [put! chan <! >! timeout close!]]
                 [goog.labs.format.csv :as csv]
                 [clojure.string :as string]
-                [cljs-idxdb.core :as idx]))
+                [db.idx :as idxdb]))
 
 ;; channel-based architecture credits https://mrmcc3.github.io/post/csv-with-clojurescript/
 
-(def db (atom nil))
+(def ^:dynamic db nil)
+(defn save-db [{db-obj :db}]
+  (println "DB bootstrapped!")
+  (def db db-obj))
+
 (def store-txs "transactions")
 (def store-tags "tags")
 
-(idx/create-db "fin" 1
-               #(->
-                 (do
+(defn db-schema [db-ref]
+  (let [
+        txstore (idxdb/delete-and-create-store db-ref store-txs {:autoIncrement true})
+        tagstore (idxdb/delete-and-create-store db-ref store-tags {:autoIncrement true})]
 
-                   (idx/delete-and-create-store % store-txs {:autoIncrement true})
-                   (idx/delete-and-create-store % store-tags {:autoIncrement true})))
-               #(reset! db %))
+        ;; create indexes
+        ;;(idxdb/create-index "dateIdx" "date" {:unique false})
+        ;;(idxdb/create-index "descriptionIdx" "description" {:unique false})
+        ;;(idxdb/create-index "amountIdx" "amount" {:unique false})
+    ))
 
-;;(idx/create-index "dateIdx" "date" {:unique false})
-;;(idx/create-index "descriptionIdx" "description" {:unique false})
-;;(idx/create-index "amountIdx" "amount" {:unique false})
+(declare ^:dynamic db-ref)
+
+(defn init-db []
+  (let [
+        [_ ch] (idxdb/request-db "fin" 1 db-schema)
+        success-chan (sub ch :success (chan))
+        error-chan (sub ch :error (chan))]
+    (go (-> (<! success-chan) save-db))
+    (go (-> (<! error-chan) println))))
+
+(init-db)
+
 (def first-file
   (map (fn [e]
          (let [target (.-currentTarget e)
@@ -47,30 +63,42 @@
     (.readAsText reader file)
     (recur)))
 
+;; 
 ;; a loop to read from file-reads
 (go-loop []
   (let [data (<! file-reads)
         [header & rest] data]
     ;(println (str "header " header))
     (doseq [datum rest]
-      (idx/add-item @db store-txs {:date (get datum 0) :description (get datum 1) :amount (get datum 2)} #(println (str "storing " datum)))))
+      (let [payload {:date (get datum 0) :description (get datum 1) :amount (get datum 2)}
+            sefn #(println (str "storing " datum " outcome " %))
+            ]
+        (idxdb/add-item @db store-txs payload sefn sefn)
+        )
+      ))
   (recur))
 
 (def transactions (cell #{}))
 
+(defn render [transaction-str]
+  (let [[date description amount :as parts] (string/split transaction-str #"\s+")]
+    ;(str date " " description " " amount)
+    (str transaction-str)))
 (defelem transaction-list [{:keys [from sorted-by] :or {sorted-by identity}}]
   (loop-tpl :bindings [transaction (cell= (sort-by sorted-by from))]
-            (li (span (cell= (str transaction)))
+            (li (span (cell= (render transaction)))
                 (button :click #(swap! from disj @transaction) "Delete"))))
 
-(defn render [{:keys [description amount date] :as tx}]
-  (str date " " description " " amount))
-(defn fetch [txs]
-  (doseq [tx txs]
-    (swap! transactions conj (render tx))
-    ))
-(defn fetch-and-render []
-  (idx/get-all @db store-txs fetch))
+(defn load []
+  (go
+    (doseq [tx (<! (idxdb/get-all-from @db store-txs 1 :keywordize-keys true))]
+        ;;(swap! transactions conj (str tx))
+         (println (str "type of  tx  is " tx))
+        ;;(let [ttx (cell= tx)]
+        ;;  (swap! transactions conj @ttx))
+        )
+    )
+ )
 
 (html
   (head
@@ -79,8 +107,9 @@
    (h1 "Fin")
     (p "Choose a CSV file")
     (input :type "file" :accept ".csv" :change put-upload)
-    (button :click fetch-and-render "Read")
-    (ul (transaction-list :from transactions ))))
+    (button :click load "Read")
+    ;;(ul (transaction-list :from transactions ))
+    ))
 
 
 
