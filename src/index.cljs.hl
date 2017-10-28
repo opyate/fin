@@ -74,22 +74,56 @@
         (idxdb/add-item db store-txs payload sefn sefn))))
   (recur))
 
-;; placeholder for reading transactions from db
+;; placeholders for reading things from db
 (def transactions (cell #{}))
+(def fin-tags (cell #{
+                  {:key "BRGAS-GAS" :tag "utilities" }
+                  {:key "BRGAS-ELECTRICITY" :tag "utilities"}
+                  }))
+
+(defn parse-tag [tag]
+  tag)
+(defelem tag-input [{:keys [to key]} [label]]
+  (let [new-tag (cell "")
+        parsed      (cell= (parse-tag new-tag))]
+    (div
+     (input
+      :value new-tag
+      :input #(reset! new-tag @%)
+      :placeholder label)
+     (button
+      :click #(when-let [tag @parsed]
+                (dosync (swap! to conj {:key key :tag tag})
+                        (reset! new-tag "")))
+      :disabled (cell= (not parsed))
+      "+"))))
+
+(defn render-tag [tag-pair key]
+  (let [tag-key (:key tag-pair)
+        tag (:tag tag-pair)]
+    (cond (= tag-key key)
+          (li (span :class "tag" tag)))))
+(defelem tag-list [{:keys [from key]}]
+  (ul
+   (loop-tpl :bindings [tag-pair (cell= from)]
+             (span (cell= (render-tag tag-pair key))))))
 
 (defn render-tx [tx]
   (let [amount (:amount tx)
         description (:description tx)
         date (:date tx)]
     (span :class "tx"
+          (tag-list :from fin-tags :key description)
+          (tag-input :to fin-tags :key description (str "tag for " description))
      (em date)
      (span description)
      (strong amount))))
 (defelem transaction-list [{:keys [from]}]
-  (loop-tpl :bindings [transaction (cell= from)]
-    (li
-      (span (cell= (render-tx transaction)))
-        (button :click #(swap! from disj @transaction) "Delete"))))
+  (ul
+    (loop-tpl :bindings [transaction (cell= from)]
+              (li
+              (span (cell= (render-tx transaction)))
+              (button :click #(swap! from disj @transaction) "Delete")))))
 
 (defn load []
   (go
@@ -104,7 +138,8 @@
     (p "Choose a CSV file")
     (input :type "file" :accept ".csv" :change put-upload)
     (button :click load "Read")
-    (ul (transaction-list :from transactions ))
+
+    (transaction-list :from transactions)
     ))
 
 
