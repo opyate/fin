@@ -113,13 +113,15 @@
       (loop-tpl :bindings [tag-pair (cell= coll)]
                 (span (cell= (render-tag tag-pair key))))
       )))
-
+(defelem tag-debug [{:keys [from]}]
+  (ul
+   (loop-tpl :bindings [tag-pair (cell= from)]
+             (li (cell= (str tag-pair))))))
 (defn render-tx [tx]
   (let [amount (:amount tx)
         description (:description tx)
         date (:date tx)]
     (span :class "tx"
-          ;;(tag-list :from fin-tags :key description)
           (tag-input :coll fin-tags :key description (str "tag for " description))
      (em date)
      (span description)
@@ -145,6 +147,7 @@
     (input :type "file" :accept ".csv" :change put-upload)
     (button :click load "Read")
 
+    ;;(tag-debug :from fin-tags)
     (transaction-list :from transactions)
     ))
 
