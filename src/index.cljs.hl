@@ -90,13 +90,11 @@
 
 
 (defn for-key [key coll]
-  (if (= key "BRGAS-GAS")
-    "utilities"
-    nil))
+  (:tag (first (filter #(= (:key %) key) coll))))
 (defn parse-tag [tag]
   tag)
 (defelem tag-input [{:keys [coll key]} [label]]
-  (let [tagged (for-key key coll)]
+  (let [tagged (for-key key @coll)]
     (if (nil? tagged)
       (let [new-tag (cell "")
             parsed      (cell= (parse-tag new-tag))]
