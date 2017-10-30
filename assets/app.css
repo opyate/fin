@@ -14,3 +14,7 @@ table {
 .tx * {
     padding: 2px;
 }
+
+.tag {
+    background-color: orange;
+}

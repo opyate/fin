@@ -77,7 +77,7 @@
 ;; placeholders for reading things from db
 (def transactions (cell #{}))
 (def fin-tags (cell #{
-                  {:key "BRGAS-GAS" :tag "utilities" }
+                  ;;{:key "BRGAS-GAS" :tag "utilities" }
                   {:key "BRGAS-ELECTRICITY" :tag "utilities"}
                   }))
 
@@ -90,11 +90,13 @@
 
 
 (defn for-key [key coll]
-  (:tag (first (filter #(= (:key %) key) coll))))
+  (:tag (first (filter #(= (:key %) key) @coll))))
 (defn parse-tag [tag]
   tag)
 (defelem tag-input [{:keys [coll key]} [label]]
-  (let [tagged (for-key key @coll)]
+  (println "tag-input" coll)
+  ;;(let [tagged (for-key key @coll)]
+  (let [tagged (for-key key (cell= coll))]
     (if (nil? tagged)
       (let [new-tag (cell "")
             parsed      (cell= (parse-tag new-tag))]
@@ -110,12 +112,12 @@
           :disabled (cell= (not parsed))
           "+")))
       ;; else
-      (loop-tpl :bindings [tag-pair (cell= coll)]
+      (for-tpl [tag-pair coll]
                 (span (cell= (render-tag tag-pair key))))
       )))
 (defelem tag-debug [{:keys [from]}]
   (ul
-   (loop-tpl :bindings [tag-pair (cell= from)]
+   (for-tpl [tag-pair from]
              (li (cell= (str tag-pair))))))
 (defn render-tx [tx]
   (let [amount (:amount tx)
@@ -128,7 +130,7 @@
      (strong amount))))
 (defelem transaction-list [{:keys [from]}]
   (ul
-    (loop-tpl :bindings [transaction (cell= from)]
+    (for-tpl [transaction from]
               (li
               (span (cell= (render-tx transaction)))
               (button :click #(swap! from disj @transaction) "Delete")))))
@@ -147,7 +149,7 @@
     (input :type "file" :accept ".csv" :change put-upload)
     (button :click load "Read")
 
-    ;;(tag-debug :from fin-tags)
+    (tag-debug :from fin-tags)
     (transaction-list :from transactions)
     ))
 
