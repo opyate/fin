@@ -81,40 +81,48 @@
                   {:key "BRGAS-ELECTRICITY" :tag "utilities"}
                   }))
 
-(defn parse-tag [tag]
-  tag)
-(defelem tag-input [{:keys [to key]} [label]]
-  (let [new-tag (cell "")
-        parsed      (cell= (parse-tag new-tag))]
-    (div
-     (input
-      :value new-tag
-      :input #(reset! new-tag @%)
-      :placeholder label)
-     (button
-      :click #(when-let [tag @parsed]
-                (dosync (swap! to conj {:key key :tag tag})
-                        (reset! new-tag "")))
-      :disabled (cell= (not parsed))
-      "+"))))
-
 (defn render-tag [tag-pair key]
   (let [tag-key (:key tag-pair)
         tag (:tag tag-pair)]
     (cond (= tag-key key)
-          (li (span :class "tag" tag)))))
-(defelem tag-list [{:keys [from key]}]
-  (ul
-   (loop-tpl :bindings [tag-pair (cell= from)]
-             (span (cell= (render-tag tag-pair key))))))
+          (span :class "tag" tag)
+          )))
+
+
+(defn for-key [key coll]
+  (if (= key "BRGAS-GAS")
+    "utilities"
+    nil))
+(defn parse-tag [tag]
+  tag)
+(defelem tag-input [{:keys [coll key]} [label]]
+  (let [tagged (for-key key coll)]
+    (if (nil? tagged)
+      (let [new-tag (cell "")
+            parsed      (cell= (parse-tag new-tag))]
+        (div
+         (input
+          :value new-tag
+          :input #(reset! new-tag @%)
+          :placeholder label)
+         (button
+          :click #(when-let [tag @parsed]
+                    (dosync (swap! coll conj {:key key :tag tag})
+                            (reset! new-tag "")))
+          :disabled (cell= (not parsed))
+          "+")))
+      ;; else
+      (loop-tpl :bindings [tag-pair (cell= coll)]
+                (span (cell= (render-tag tag-pair key))))
+      )))
 
 (defn render-tx [tx]
   (let [amount (:amount tx)
         description (:description tx)
         date (:date tx)]
     (span :class "tx"
-          (tag-list :from fin-tags :key description)
-          (tag-input :to fin-tags :key description (str "tag for " description))
+          ;;(tag-list :from fin-tags :key description)
+          (tag-input :coll fin-tags :key description (str "tag for " description))
      (em date)
      (span description)
      (strong amount))))
