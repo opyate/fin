@@ -70,16 +70,18 @@
     ;(println (str "header " header))
     (doseq [datum rest]
       (let [payload {:date (get datum 0) :description (get datum 1) :amount (get datum 2)}
-            sefn #(println (str "storing " datum " outcome " %))]
-        (idxdb/add-item db store-txs payload sefn sefn))))
+            success-or-error-fn #(println (str "storing " datum " outcome " %))]
+        (idxdb/add-item db store-txs payload success-or-error-fn success-or-error-fn))))
   (recur))
 
 ;; placeholders for reading things from db
-(def transactions (cell #{}))
-(def fin-tags (cell #{
-                  ;;{:key "BRGAS-GAS" :tag "utilities" }
-                  {:key "BRGAS-ELECTRICITY" :tag "utilities"}
-                  }))
+(defc transactions #{})
+(defc fin-tags #{
+                 ;;{:key "BRGAS-GAS" :tag "utilities" }
+                 {:key "BRGAS-ELECTRICITY" :tag "utilities"}
+                 })
+(defn fetch [x coll] (:tag (first (filter #(= (:key %) x) coll))))
+(defc= tagged-txs (map #(assoc % :tag (fetch (:description %) fin-tags)) transactions))
 
 (defn render-tag [tag-pair key]
   (let [tag-key (:key tag-pair)
@@ -93,47 +95,42 @@
   (:tag (first (filter #(= (:key %) key) @coll))))
 (defn parse-tag [tag]
   tag)
-(defelem tag-input [{:keys [coll key]} [label]]
-  (println "tag-input" coll)
-  ;;(let [tagged (for-key key @coll)]
-  (let [tagged (for-key key (cell= coll))]
-    (if (nil? tagged)
-      (let [new-tag (cell "")
-            parsed      (cell= (parse-tag new-tag))]
-        (div
-         (input
-          :value new-tag
-          :input #(reset! new-tag @%)
-          :placeholder label)
-         (button
-          :click #(when-let [tag @parsed]
-                    (dosync (swap! coll conj {:key key :tag tag})
-                            (reset! new-tag "")))
-          :disabled (cell= (not parsed))
-          "+")))
-      ;; else
-      (for-tpl [tag-pair coll]
-                (span (cell= (render-tag tag-pair key))))
-      )))
+
 (defelem tag-debug [{:keys [from]}]
   (ul
    (for-tpl [tag-pair from]
              (li (cell= (str tag-pair))))))
 (defn render-tx [tx]
-  (let [amount (:amount tx)
-        description (:description tx)
-        date (:date tx)]
+  (let [
+        amount (cell= (:amount tx))
+        description (cell= (:description tx))
+        date (cell= (:date tx))
+        tag (cell= (:tag tx))
+        new-tag (cell @tag)
+        parsed      (cell= (parse-tag new-tag))]
     (span :class "tx"
-          (tag-input :coll fin-tags :key description (str "tag for " description))
+          (div
+            (input
+             :value new-tag
+             :input #(reset! new-tag @%)
+             :placeholder label)
+            (button
+             :click #(when-let [tag @parsed]
+                       (dosync (swap! fin-tags conj {:key (str description) :tag (str tag)})
+                               (reset! new-tag "")))
+             :disabled (cell= (not parsed))
+             "+"))
      (em date)
      (span description)
-     (strong amount))))
+     (strong amount)
+     )))
 (defelem transaction-list [{:keys [from]}]
   (ul
-    (for-tpl [transaction from]
+   (for-tpl [
+             tagged-tx from]
               (li
-              (span (cell= (render-tx transaction)))
-              (button :click #(swap! from disj @transaction) "Delete")))))
+               (span (render-tx tagged-tx))
+              (button :click #(swap! from disj @tagged-tx) "Delete")))))
 
 (defn load []
   (go
@@ -149,8 +146,8 @@
     (input :type "file" :accept ".csv" :change put-upload)
     (button :click load "Read")
 
-    (tag-debug :from fin-tags)
-    (transaction-list :from transactions)
+    ;;(tag-debug :from fin-tags)
+    (transaction-list :from tagged-txs  )
     ))
 
 
