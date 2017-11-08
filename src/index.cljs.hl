@@ -77,8 +77,9 @@
 ;; placeholders for reading things from db
 (defc transactions #{})
 (defc fin-tags #{
-                 ;;{:key "BRGAS-GAS" :tag "utilities" }
                  {:key "BRGAS-ELECTRICITY" :tag "utilities"}
+                 {:key "HALIFAX" :tag "mortgage"}
+                 {:key "BRGAS-GAS" :tag "utilities"}
                  })
 (defn fetch [x coll] (:tag (first (filter #(= (:key %) x) coll))))
 (defc= tagged-txs (map #(assoc % :tag (fetch (:description %) fin-tags)) transactions))
@@ -106,20 +107,24 @@
         description (cell= (:description tx))
         date (cell= (:date tx))
         tag (cell= (:tag tx))
-        new-tag (cell @tag)
+        new-tag (cell "")
         parsed      (cell= (parse-tag new-tag))]
+    ;;(println "tag" @tag @description)
     (span :class "tx"
-          (div
-            (input
-             :value new-tag
-             :input #(reset! new-tag @%)
-             :placeholder label)
-            (button
-             :click #(when-let [tag @parsed]
-                       (dosync (swap! fin-tags conj {:key (str @description) :tag (str tag)})
-                               (reset! new-tag "")))
-             :disabled (cell= (not parsed))
-             "+"))
+          (cond-tpl tag
+                    (span @tag)
+                    :else
+                    (div
+                     (input
+                      :value new-tag
+                      :input #(reset! new-tag @%)
+                      :placeholder label)
+                     (button
+                      :click #(when-let [tag @parsed]
+                                (dosync (swap! fin-tags conj {:key (str @description) :tag (str tag)})
+                                        (reset! new-tag "")))
+                      :disabled (cell= (not parsed))
+                      "+")))
      (em date)
      (span description)
      (strong amount)
