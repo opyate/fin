@@ -126,9 +126,9 @@
                                         (reset! new-tag "")))
                       :disabled (cell= (not parsed))
                       "+")))
-     (em date)
-     (span description)
-     (strong amount)
+     (em @date)
+     (span @description)
+     (strong @amount)
      )))
 (defelem transaction-list [{:keys [from]}]
   (ul
