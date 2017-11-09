@@ -20,10 +20,10 @@
         txstore (idxdb/delete-and-create-store db-ref store-txs {:auto-increment true})
         tagstore (idxdb/delete-and-create-store db-ref store-tags {:auto-increment true})]
 
-        ;; create indexes
-        ;;(idxdb/create-index "dateIdx" "date" {:unique false})
-        ;;(idxdb/create-index "descriptionIdx" "description" {:unique false})
-        ;;(idxdb/create-index "amountIdx" "amount" {:unique false})
+    ;; create indexes
+    ;;(idxdb/create-index "dateIdx" "date" {:unique false})
+    ;;(idxdb/create-index "descriptionIdx" "description" {:unique false})
+    ;;(idxdb/create-index "amountIdx" "amount" {:unique false})
     ))
 
 (defn error-prn [& args] (println "Error: " args))
@@ -67,7 +67,7 @@
 (go-loop []
   (let [data (<! file-reads)
         [header & rest] data]
-    ;(println (str "header " header))
+                                        ;(println (str "header " header))
     (doseq [datum rest]
       (let [payload {:date (get datum 0) :description (get datum 1) :amount (get datum 2)}
             success-or-error-fn #(println (str "storing " datum " outcome " %))]
@@ -75,13 +75,16 @@
   (recur))
 
 ;; placeholders for reading things from db
-(defc transactions #{})
-(defc fin-tags #{
-                 {:key "BRGAS-ELECTRICITY" :tag "utilities"}
-                 {:key "HALIFAX" :tag "mortgage"}
-                 {:key "BRGAS-GAS" :tag "utilities"}
-                 {:key "ENFIELD" :tag "counciltax"}
-                 })
+(defc transactions
+  #{
+        })
+(defc fin-tags
+  #{
+    {:key "BRGAS-ELECTRICITY" :tag "utilities"}
+    {:key "HALIFAX" :tag "mortgage"}
+    {:key "BRGAS-GAS" :tag "utilities"}
+    {:key "ENFIELD" :tag "counciltax"}
+    })
 (defn fetch [x coll] (:tag (first (filter #(= (:key %) x) coll))))
 (defc= tagged-txs (map #(assoc % :tag (fetch (:description %) fin-tags)) transactions))
 
@@ -92,7 +95,6 @@
           (span :class "tag" tag)
           )))
 
-
 (defn for-key [key coll]
   (:tag (first (filter #(= (:key %) key) @coll))))
 (defn parse-tag [tag]
@@ -101,16 +103,21 @@
 (defelem tag-debug [{:keys [from]}]
   (ul
    (for-tpl [tag-pair from]
-             (li (cell= (str tag-pair))))))
+            (li (cell= (str tag-pair))))))
 (defn render-tx [tx]
   (let [
+        ;;[amount description date tag] (cell= [(:amount tx) (:description tx) (:date tx) (:tag tx)])
         amount (cell= (:amount tx))
+        ;;- amount (:amount @tx)
         description (cell= (:description tx))
+        ;;- description (:description @tx)
         date (cell= (:date tx))
+        ;;- date (:date @tx)
         tag (cell= (:tag tx))
+        ;;- tag (:tag @tx)
         new-tag (cell "")
         parsed      (cell= (parse-tag new-tag))]
-    ;;(println "tag" @tag @description)
+    ;;(println "tag" @tx)
     (span :class "tx"
           (cond-tpl tag
                     (span @tag)
@@ -126,38 +133,35 @@
                                         (reset! new-tag "")))
                       :disabled (cell= (not parsed))
                       "+")))
-     (em @date)
-     (span @description)
-     (strong @amount)
-     )))
+          (em date)
+          (span description)
+          (strong amount)
+          )))
 (defelem transaction-list [{:keys [from]}]
   (ul
    (for-tpl [
              tagged-tx from]
-              (li
-               (span (render-tx tagged-tx))
-              (button :click #(swap! from disj @tagged-tx) "Delete")))))
+            (li
+             (span (render-tx tagged-tx))
+             (button :click #(swap! from disj @tagged-tx) "Delete")))))
 
 (defn load []
   (go
     (doseq [tx (<! (idxdb/get-all-from db store-txs 1 :keywordize-keys true))]
-        (swap! transactions conj tx))))
+      (swap! transactions conj tx))))
 
 (html
-  (head
-    (link :href "app.css" :rel "stylesheet" :type "text/css"))
-  (body
-   (h1 "Fin")
-    (p "Choose a CSV file")
-    (input :type "file" :accept ".csv" :change put-upload)
-    (button :click load "Read")
+ (head
+  (link :href "app.css" :rel "stylesheet" :type "text/css"))
+ (body
+  (h1 "Fin")
+  (p "Choose a CSV file")
+  (input :type "file" :accept ".csv" :change put-upload)
+  (button :click load "Read")
 
-    (tag-debug :from tagged-txs)
-    (hr)
-    (tag-debug :from fin-tags)
-    (hr)
-    (transaction-list :from tagged-txs  )
-    ))
-
-
-
+  (tag-debug :from tagged-txs)
+  (hr)
+  (tag-debug :from fin-tags)
+  (hr)
+  (transaction-list :from tagged-txs  )
+  ))
