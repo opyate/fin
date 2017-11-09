@@ -101,7 +101,7 @@
   tag)
 
 (defelem tag-debug [{:keys [from]}]
-  (ul
+  (ol
    (for-tpl [tag-pair from]
             (li (cell= (str tag-pair))))))
 (defn render-tx [tx]
@@ -122,7 +122,7 @@
           (cond-tpl tag
                     (span @tag)
                     :else
-                    (div
+                    (span
                      (input
                       :value new-tag
                       :input #(reset! new-tag @%)
@@ -138,7 +138,7 @@
           (strong amount)
           )))
 (defelem transaction-list [{:keys [from]}]
-  (ul
+  (ol
    (for-tpl [
              tagged-tx from]
             (li
