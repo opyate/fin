@@ -104,7 +104,7 @@
   (ol
    (for-tpl [tag-pair from]
             (li (cell= (str tag-pair))))))
-(defn render-tx [tx]
+(defelem render-tx [{:keys [tx]}]
   (let [
         ;;[amount description date tag] (cell= [(:amount tx) (:description tx) (:date tx) (:tag tx)])
         amount (cell= (:amount tx))
@@ -128,8 +128,9 @@
                       :input #(reset! new-tag @%)
                       )
                      (button
-                      :click #(when-let [tag @parsed]
-                                (dosync (swap! fin-tags conj {:key (str @description) :tag @parsed})
+                      :click #(when-let [parsed-tag @parsed]
+                                (dosync
+                                 (swap! fin-tags conj {:key @description :tag @parsed})
                                         (reset! new-tag "")))
                       :disabled (cell= (not parsed))
                       "+")))
@@ -142,7 +143,7 @@
    (for-tpl [
              tagged-tx from]
             (li
-             (span (render-tx tagged-tx))
+             (span (render-tx :tx tagged-tx))
              (button :click #(swap! from disj @tagged-tx) "Delete")))))
 
 (defn load []
