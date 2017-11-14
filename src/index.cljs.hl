@@ -1,79 +1,12 @@
 (page "index.html"
-      (:require-macros [cljs.core.async.macros :refer [go go-loop]])
-      (:require [cljs.core.async :refer [put! chan <! >! timeout close!]]
-                [goog.labs.format.csv :as csv]
-                [clojure.string :as string]
-                [db.idx :as idxdb]
-                [ui.els :as ui]))
+      (:require-macros [cljs.core.async.macros :refer [go]])
+      (:require [cljs.core.async :refer [ chan <! >! timeout close!]]
+                [ui.els :as ui]
+                [csv.upload :as csv]
+                [db.dao :as dao]))
 
 ;; channel-based architecture credits https://mrmcc3.github.io/post/csv-with-clojurescript/
 
-(def ^:dynamic db nil)
-(defn save-db [{db-obj :db}]
-  (println "DB bootstrapped!")
-  (set! db db-obj))
-
-(def store-txs "transactions")
-(def store-tags "tags")
-
-(defn db-schema [db-ref]
-  (let [
-        txstore (idxdb/delete-and-create-store db-ref store-txs {:auto-increment true})
-        tagstore (idxdb/delete-and-create-store db-ref store-tags {:auto-increment true})]
-
-    ;; create indexes
-    ;;(idxdb/create-index "dateIdx" "date" {:unique false})
-    ;;(idxdb/create-index "descriptionIdx" "description" {:unique false})
-    ;;(idxdb/create-index "amountIdx" "amount" {:unique false})
-    ))
-
-(defn error-prn [& args] (println "Error: " args))
-;; sub is a hoplon tag, so fully qualify cljs.core.async/sub
-(defn init-db []
-  (let [
-        [_ ch] (idxdb/request-db "fin" 1 db-schema)
-        success-chan (cljs.core.async/sub ch :success (chan))
-        error-chan (cljs.core.async/sub ch :error (chan))]
-    (go (-> (<! success-chan) save-db))
-    (go (-> (<! error-chan) error-prn))))
-
-(init-db)
-
-(def first-file
-  (map (fn [e]
-         (let [target (.-currentTarget e)
-               file (-> target .-files (aget 0))]
-           (set! (.-value target) "")
-           file))))
-
-(def extract-result
-  (map #(-> % .-target .-result csv/parse js->clj)))
-
-(def upload-reqs (chan 1 first-file))
-(def file-reads (chan 1 extract-result))
-
-(defn put-upload [e]
-  (put! upload-reqs e))
-
-;; a loop to write to file-reads
-(go-loop []
-  (let [reader (js/FileReader.)
-        file (<! upload-reqs)]
-    (print (str "filename" (.-name file)))
-    (set! (.-onload reader) #(put! file-reads %))
-    (.readAsText reader file)
-    (recur)))
-
-;; a loop to read from file-reads
-(go-loop []
-  (let [data (<! file-reads)
-        [header & rest] data]
-                                        ;(println (str "header " header))
-    (doseq [datum rest]
-      (let [payload {:date (get datum 0) :description (get datum 1) :amount (get datum 2)}
-            success-or-error-fn #(println (str "storing " datum " outcome " %))]
-        (idxdb/add-item db store-txs payload success-or-error-fn success-or-error-fn))))
-  (recur))
 
 ;; placeholders for reading things from db
 (defc transactions
@@ -88,10 +21,8 @@
     })
 (defn fetch [x coll] (:tag (first (filter #(= (:key %) x) coll))))
 (defc= tagged-txs (map #(assoc % :tag (fetch (:description %) fin-tags)) transactions))
-(defn load []
-  (go
-    (doseq [tx (<! (idxdb/get-all-from db store-txs 1 :keywordize-keys true))]
-      (swap! transactions conj tx))))
+
+(defn load [] (dao/load-into transactions))
 
 (html
  (head
@@ -99,7 +30,7 @@
  (body
   (h1 "Fin")
   (p "Choose a CSV file")
-  (input :type "file" :accept ".csv" :change put-upload)
+  (input :type "file" :accept ".csv" :change csv/put-upload)
   (button :click load "Read")
 
   (ui/summaries :from tagged-txs)

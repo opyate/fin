@@ -8,7 +8,6 @@
             (li (cell= (str tag-pair))))))
 (defelem render-tx [{:keys [tx]}]
   (let [
-        ;;[amount description date tag] (cell= [(:amount tx) (:description tx) (:date tx) (:tag tx)])
         amount (cell= (:amount tx))
         description (cell= (:description tx))
         date (cell= (:date tx))
