@@ -1,7 +1,7 @@
 (page "index.html"
       (:require-macros [cljs.core.async.macros :refer [go]])
       (:require [cljs.core.async :refer [ chan <! >! timeout close!]]
-                [ui.els :refer [transaction-list]]
+                [ui.els :refer [transaction-list tag-debug]]
                 [ui.summaries :refer [summaries]]
                 [csv.upload :as csv]
                 [db.dao :as dao]))
@@ -22,7 +22,11 @@
     })
 (defn fetch [x coll] (:tag (first (filter #(= (:key %) x) coll))))
 (defc= tagged-txs (map #(assoc % :tag (fetch (:description %) tags)) transactions))
-(defc= summed-txs [1 2 3])
+(defc= summed-txs (map
+                   (fn [it]
+                     (let [[k v] it]
+                       {:tag k :sum (reduce + (map #(-> % :amount js/parseFloat) v))}))
+                   (group-by :tag tagged-txs)))
 
 (defn load [] (dao/load-into transactions))
 
@@ -37,10 +41,10 @@
 
   (summaries :from summed-txs)
   (transaction-list :tagged-txs tagged-txs :tags tags)
-  #_  (hr)
-  #_  (h5 "DB + tags")
-  #_  (tag-debug :from tagged-txs)
-  #_  (hr)
-  #_  (h5 "Tags")
-  #_  (tag-debug :from tags)
+  (hr)
+  (h5 "DB + tags")
+  (tag-debug :from tagged-txs)
+  (hr)
+  (h5 "Tags")
+  (tag-debug :from tags)
   ))

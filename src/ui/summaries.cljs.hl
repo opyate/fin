@@ -1,8 +1,15 @@
 (ns ui.summaries)
 
+(defelem render [{:keys [from]}]
+  (let [tag (cell= (:tag from))
+        sum (cell= (:sum from))]
+    (div
+     (span tag)
+     (span sum))))
+
 (defelem summaries [{:keys [from]}]
   (ol
    (for-tpl [it from]
             (li
-             (span it)))))
+             (render :from it)))))
 
