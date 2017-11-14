@@ -101,7 +101,7 @@
   tag)
 
 (defelem tag-debug [{:keys [from]}]
-  (ol
+  (ol :class "debug"
    (for-tpl [tag-pair from]
             (li (cell= (str tag-pair))))))
 (defelem render-tx [{:keys [tx]}]
@@ -120,7 +120,7 @@
     ;;(println "tag" @tx)
     (span :class "tx"
           (cond-tpl tag
-                    (span @tag)
+                    (span tag)
                     :else
                     (span
                      (input
@@ -160,9 +160,11 @@
   (input :type "file" :accept ".csv" :change put-upload)
   (button :click load "Read")
 
+  (transaction-list :from tagged-txs  )
+  (hr)
+  (h5 "DB + tags")
   (tag-debug :from tagged-txs)
   (hr)
+  (h5 "Tags")
   (tag-debug :from fin-tags)
-  (hr)
-  (transaction-list :from tagged-txs  )
   ))
