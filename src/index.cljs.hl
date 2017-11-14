@@ -3,7 +3,8 @@
       (:require [cljs.core.async :refer [put! chan <! >! timeout close!]]
                 [goog.labs.format.csv :as csv]
                 [clojure.string :as string]
-                [db.idx :as idxdb]))
+                [db.idx :as idxdb]
+                [ui.els :as ui]))
 
 ;; channel-based architecture credits https://mrmcc3.github.io/post/csv-with-clojurescript/
 
@@ -87,61 +88,6 @@
     })
 (defn fetch [x coll] (:tag (first (filter #(= (:key %) x) coll))))
 (defc= tagged-txs (map #(assoc % :tag (fetch (:description %) fin-tags)) transactions))
-
-(defn render-tag [tag-pair key]
-  (let [tag-key (:key tag-pair)
-        tag (:tag tag-pair)]
-    (cond (= tag-key key)
-          (span :class "tag" tag)
-          )))
-
-(defn for-key [key coll]
-  (:tag (first (filter #(= (:key %) key) @coll))))
-(defn parse-tag [tag]
-  tag)
-
-(defelem tag-debug [{:keys [from]}]
-  (ol :class "debug"
-   (for-tpl [tag-pair from]
-            (li (cell= (str tag-pair))))))
-(defelem render-tx [{:keys [tx]}]
-  (let [
-        ;;[amount description date tag] (cell= [(:amount tx) (:description tx) (:date tx) (:tag tx)])
-        amount (cell= (:amount tx))
-        description (cell= (:description tx))
-        date (cell= (:date tx))
-        tag (cell= (:tag tx))
-        new-tag (cell "")
-        parsed      (cell= (parse-tag new-tag))]
-    (span :class "tx"
-          (cond-tpl tag
-                    (span tag)
-                    :else
-                    (span
-                     (input
-                      :value new-tag
-                      :input #(reset! new-tag @%)
-                      )
-                     (button
-                      :click #(when-let [parsed-tag @parsed]
-                                (dosync
-                                 (swap! fin-tags conj {:key @description :tag @parsed})
-                                        (reset! new-tag "")))
-                      :disabled (cell= (not parsed))
-                      "+")))
-          (em date)
-          (span description)
-          (strong amount)
-          )))
-(defelem transaction-list [{:keys [from]}]
-  (ol
-   (for-tpl [
-             tagged-tx from]
-            (li
-             (span (render-tx :tx tagged-tx))
-             (button :click #(swap! from disj @tagged-tx) "Delete")))))
-(defelem summaries [{:keys [from]}]
-  (span "coming soon"))
 (defn load []
   (go
     (doseq [tx (<! (idxdb/get-all-from db store-txs 1 :keywordize-keys true))]
@@ -156,8 +102,8 @@
   (input :type "file" :accept ".csv" :change put-upload)
   (button :click load "Read")
 
-  (summaries :from tagged-txs)
-  (transaction-list :from tagged-txs  )
+  (ui/summaries :from tagged-txs)
+  (ui/transaction-list :from tagged-txs  )
   #_  (hr)
   #_  (h5 "DB + tags")
   #_  (tag-debug :from tagged-txs)

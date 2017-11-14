@@ -1,0 +1,46 @@
+(ns ui.els)
+(defn parse-tag [tag]
+  tag)
+
+(defelem tag-debug [{:keys [from]}]
+  (ol :class "debug"
+   (for-tpl [tag-pair from]
+            (li (cell= (str tag-pair))))))
+(defelem render-tx [{:keys [tx]}]
+  (let [
+        ;;[amount description date tag] (cell= [(:amount tx) (:description tx) (:date tx) (:tag tx)])
+        amount (cell= (:amount tx))
+        description (cell= (:description tx))
+        date (cell= (:date tx))
+        tag (cell= (:tag tx))
+        new-tag (cell "")
+        parsed      (cell= (parse-tag new-tag))]
+    (span :class "tx"
+          (cond-tpl tag
+                    (span tag)
+                    :else
+                    (span
+                     (input
+                      :value new-tag
+                      :input #(reset! new-tag @%)
+                      )
+                     (button
+                      :click #(when-let [parsed-tag @parsed]
+                                (dosync
+                                 (swap! fin-tags conj {:key @description :tag @parsed})
+                                        (reset! new-tag "")))
+                      :disabled (cell= (not parsed))
+                      "+")))
+          (em date)
+          (span description)
+          (strong amount)
+          )))
+(defelem transaction-list [{:keys [from]}]
+  (ol
+   (for-tpl [
+             tagged-tx from]
+            (li
+             (span (render-tx :tx tagged-tx))
+             (button :click #(swap! from disj @tagged-tx) "Delete")))))
+(defelem summaries [{:keys [from]}]
+  (span "coming soon"))
