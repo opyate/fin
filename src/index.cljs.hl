@@ -1,7 +1,8 @@
 (page "index.html"
       (:require-macros [cljs.core.async.macros :refer [go]])
       (:require [cljs.core.async :refer [ chan <! >! timeout close!]]
-                [ui.els :as ui]
+                [ui.els :refer [transaction-list]]
+                [ui.summaries :refer [summaries]]
                 [csv.upload :as csv]
                 [db.dao :as dao]))
 
@@ -33,8 +34,8 @@
   (input :type "file" :accept ".csv" :change csv/put-upload)
   (button :click load "Read")
 
-  (ui/summaries :from tagged-txs)
-  (ui/transaction-list :tagged-txs tagged-txs :tags tags)
+  (summaries :from tagged-txs)
+  (transaction-list :tagged-txs tagged-txs :tags tags)
   #_  (hr)
   #_  (h5 "DB + tags")
   #_  (tag-debug :from tagged-txs)

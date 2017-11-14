@@ -1,0 +1,3 @@
+(ns ui.summaries)
+(defelem summaries [{:keys [from]}]
+  (span "coming soon"))

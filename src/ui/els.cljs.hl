@@ -41,5 +41,3 @@
             (li
              (span (render-tx :tx tagged-tx :tags tags))
              (button :click #(swap! tagged-txs disj @tagged-tx) "Delete")))))
-(defelem summaries [{:keys [from]}]
-  (span "coming soon"))
