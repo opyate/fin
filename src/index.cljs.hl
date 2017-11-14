@@ -12,7 +12,7 @@
 (defc transactions
   #{
         })
-(defc fin-tags
+(defc tags
   #{
     {:key "BRGAS-ELECTRICITY" :tag "utilities"}
     {:key "HALIFAX" :tag "mortgage"}
@@ -20,7 +20,7 @@
     {:key "ENFIELD" :tag "counciltax"}
     })
 (defn fetch [x coll] (:tag (first (filter #(= (:key %) x) coll))))
-(defc= tagged-txs (map #(assoc % :tag (fetch (:description %) fin-tags)) transactions))
+(defc= tagged-txs (map #(assoc % :tag (fetch (:description %) tags)) transactions))
 
 (defn load [] (dao/load-into transactions))
 
@@ -34,11 +34,11 @@
   (button :click load "Read")
 
   (ui/summaries :from tagged-txs)
-  (ui/transaction-list :from tagged-txs  )
+  (ui/transaction-list :tagged-txs tagged-txs :tags tags)
   #_  (hr)
   #_  (h5 "DB + tags")
   #_  (tag-debug :from tagged-txs)
   #_  (hr)
   #_  (h5 "Tags")
-  #_  (tag-debug :from fin-tags)
+  #_  (tag-debug :from tags)
   ))

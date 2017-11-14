@@ -6,7 +6,7 @@
   (ol :class "debug"
    (for-tpl [tag-pair from]
             (li (cell= (str tag-pair))))))
-(defelem render-tx [{:keys [tx]}]
+(defelem render-tx [{:keys [tx tags]}]
   (let [
         amount (cell= (:amount tx))
         description (cell= (:description tx))
@@ -26,7 +26,7 @@
                      (button
                       :click #(when-let [parsed-tag @parsed]
                                 (dosync
-                                 (swap! fin-tags conj {:key @description :tag @parsed})
+                                 (swap! tags conj {:key @description :tag @parsed})
                                         (reset! new-tag "")))
                       :disabled (cell= (not parsed))
                       "+")))
@@ -34,12 +34,12 @@
           (span description)
           (strong amount)
           )))
-(defelem transaction-list [{:keys [from]}]
+(defelem transaction-list [{:keys [tagged-txs tags]}]
   (ol
    (for-tpl [
-             tagged-tx from]
+             tagged-tx tagged-txs]
             (li
-             (span (render-tx :tx tagged-tx))
-             (button :click #(swap! from disj @tagged-tx) "Delete")))))
+             (span (render-tx :tx tagged-tx :tags tags))
+             (button :click #(swap! tagged-txs disj @tagged-tx) "Delete")))))
 (defelem summaries [{:keys [from]}]
   (span "coming soon"))
