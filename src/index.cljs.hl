@@ -108,16 +108,11 @@
   (let [
         ;;[amount description date tag] (cell= [(:amount tx) (:description tx) (:date tx) (:tag tx)])
         amount (cell= (:amount tx))
-        ;;- amount (:amount @tx)
         description (cell= (:description tx))
-        ;;- description (:description @tx)
         date (cell= (:date tx))
-        ;;- date (:date @tx)
         tag (cell= (:tag tx))
-        ;;- tag (:tag @tx)
         new-tag (cell "")
         parsed      (cell= (parse-tag new-tag))]
-    ;;(println "tag" @tx)
     (span :class "tx"
           (cond-tpl tag
                     (span tag)
@@ -145,7 +140,8 @@
             (li
              (span (render-tx :tx tagged-tx))
              (button :click #(swap! from disj @tagged-tx) "Delete")))))
-
+(defelem summaries [{:keys [from]}]
+  (span "coming soon"))
 (defn load []
   (go
     (doseq [tx (<! (idxdb/get-all-from db store-txs 1 :keywordize-keys true))]
@@ -160,11 +156,12 @@
   (input :type "file" :accept ".csv" :change put-upload)
   (button :click load "Read")
 
+  (summaries :from tagged-txs)
   (transaction-list :from tagged-txs  )
-  (hr)
-  (h5 "DB + tags")
-  (tag-debug :from tagged-txs)
-  (hr)
-  (h5 "Tags")
-  (tag-debug :from fin-tags)
+  #_  (hr)
+  #_  (h5 "DB + tags")
+  #_  (tag-debug :from tagged-txs)
+  #_  (hr)
+  #_  (h5 "Tags")
+  #_  (tag-debug :from fin-tags)
   ))
