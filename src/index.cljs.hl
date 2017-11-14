@@ -22,6 +22,7 @@
     })
 (defn fetch [x coll] (:tag (first (filter #(= (:key %) x) coll))))
 (defc= tagged-txs (map #(assoc % :tag (fetch (:description %) tags)) transactions))
+(defc= summed-txs [1 2 3])
 
 (defn load [] (dao/load-into transactions))
 
@@ -34,7 +35,7 @@
   (input :type "file" :accept ".csv" :change csv/put-upload)
   (button :click load "Read")
 
-  (summaries :from tagged-txs)
+  (summaries :from summed-txs)
   (transaction-list :tagged-txs tagged-txs :tags tags)
   #_  (hr)
   #_  (h5 "DB + tags")

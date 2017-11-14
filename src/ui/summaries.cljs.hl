@@ -1,3 +1,8 @@
 (ns ui.summaries)
+
 (defelem summaries [{:keys [from]}]
-  (span "coming soon"))
+  (ol
+   (for-tpl [it from]
+            (li
+             (span it)))))
+
