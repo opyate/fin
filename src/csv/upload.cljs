@@ -35,8 +35,7 @@
   (let [data (<! file-reads)
         [header & rest] data]
     (doseq [datum rest]
-      (let [payload {:date (get datum 0) :description (get datum 1) :amount (get datum 2)}
-            success-or-error-fn #(println (str "storing " datum " outcome " %))]
-        (dao/put payload success-or-error-fn)
+      (let [payload {:date (get datum 0) :description (get datum 1) :amount (get datum 2)}]
+        (dao/put-tx payload dao/debug-fn)
         )))
   (recur))

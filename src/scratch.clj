@@ -76,3 +76,9 @@ summed-txs
   )
 
 
+(def things
+  #{{:key "BRGAS-GAS" :tag "utilities" }{:key "BRGAS-ELECTRICITY", :tag "utilities"} {:key "HALIFAX", :tag "mortgage"} {:key "ENFIELD", :tag "counciltax"} {:key "AIL - HSBC", :tag "xxx"}}
+  )
+
+(for [tag things]
+  (println "tag " tag))

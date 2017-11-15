@@ -38,8 +38,17 @@
 
 ;; gubbins end
 
-(defn put [payload fn]
-    (idxdb/add-item db store-txs payload fn fn))
+(defn debug-fn [datum response]
+  (println (str "storing " datum ", response " response)))
+
+(defn ^:private put [payload store fn]
+    (idxdb/add-item db store payload fn fn))
+
+(defn put-tx [payload fn]
+  (put payload store-txs fn))
+
+(defn put-tag [payload fn]
+  (put payload store-tags fn))
 
 (defn ^:private load [into-coll store]
   (go

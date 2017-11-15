@@ -10,16 +10,9 @@
 
 
 ;; placeholders for reading things from db
-(defc transactions
-  #{
-        })
-(defc tags
-  #{
-    {:key "BRGAS-ELECTRICITY" :tag "utilities"}
-    {:key "HALIFAX" :tag "mortgage"}
-    {:key "BRGAS-GAS" :tag "utilities"}
-    {:key "ENFIELD" :tag "counciltax"}
-    })
+(defc transactions #{})
+(defc tags #{})
+
 (defn fetch [x coll] (:tag (first (filter #(= (:key %) x) coll))))
 (defc= tagged-txs (map #(assoc % :tag (fetch (:description %) tags)) transactions))
 (defc= summed-txs (map

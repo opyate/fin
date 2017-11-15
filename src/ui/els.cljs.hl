@@ -1,4 +1,5 @@
-(ns ui.els)
+(ns ui.els
+  (:require [db.dao :as dao]))
 (defn parse-tag [tag]
   tag)
 
@@ -26,8 +27,10 @@
                      (button
                       :click #(when-let [parsed-tag @parsed]
                                 (dosync
-                                 (swap! tags conj {:key @description :tag @parsed})
-                                        (reset! new-tag "")))
+                                 (let [payload {:key @description :tag @parsed}]
+                                   (swap! tags conj payload)
+                                   (dao/put-tag payload dao/debug-fn))
+                                 (reset! new-tag "")))
                       :disabled (cell= (not parsed))
                       "+")))
           (em date)
