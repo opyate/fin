@@ -41,7 +41,7 @@
   (transaction-list :tagged-txs tagged-txs :tags tags)
   (cond-tpl
    debug
-   (div
+   (div :class "debug"
     (hr)
     (h5 "DB + tags")
     (tag-debug :from tagged-txs)

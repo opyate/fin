@@ -4,7 +4,7 @@
   tag)
 
 (defelem tag-debug [{:keys [from]}]
-  (ol :class "debug"
+  (ol
    (for-tpl [tag-pair from]
             (li (cell= (str tag-pair))))))
 (defelem render-tx [{:keys [tx tags]}]

@@ -7,18 +7,6 @@ h1 {
     color: blue;
 }
 
-table {
-    border: 1px;
-}
-
-.tx * {
-    padding: 2px;
-}
-
-.tag {
-    background-color: orange;
-}
-
 .debug {
     background-color: #FFF755;
 }
