@@ -6,7 +6,6 @@
                 [csv.upload :as csv]
                 [db.dao :as dao]))
 
-;; channel-based architecture credits https://mrmcc3.github.io/post/csv-with-clojurescript/
 
 
 ;; placeholders for reading things from db
@@ -14,17 +13,24 @@
 (defc tags #{})
 
 (defn fetch [x coll] (:tag (first (filter #(= (:key %) x) coll))))
-(defc= tagged-txs (map #(assoc % :tag (fetch (:description %) tags)) transactions))
-(defc= summed-txs (map
-                   (fn [it]
-                     (let [[k v] it]
-                       {:tag k :sum (reduce + (map #(-> % :amount js/parseFloat) v))}))
-                   (group-by :tag tagged-txs)))
+(defc= tagged-txs
+  (map #(assoc % :tag (fetch (:description %) tags)) transactions))
+(defc= summed-txs
+  (map
+   (fn [it]
+     (let [[k v] it]
+       {:tag k :sum (reduce + (map #(-> % :amount js/parseFloat) v))}))
+   (group-by :tag tagged-txs)))
 
 (defn load []
   (dao/load-txs transactions)
   (dao/load-tags tags))
-(load)
+
+(defn sleep [f ms]
+  (js/setTimeout f ms))
+;; TODO actually wait for dao/init-db
+(sleep #(load) 1000)
+
 
 (defc debug false)
 
@@ -32,19 +38,33 @@
  (head
   (link :href "app.css" :rel "stylesheet" :type "text/css"))
  (body
-  (h1 "Fin")
-  (p "Choose a CSV file")
-  (input :type "file" :accept ".csv" :change csv/put-upload)
-  #_ (button :click load "Read")
+  (div
+   :class "wrapper"
 
-  (summaries :from summed-txs)
-  (transaction-list :tagged-txs tagged-txs :tags tags)
-  (cond-tpl
-   debug
-   (div :class "debug"
-    (hr)
-    (h5 "DB + tags")
-    (tag-debug :from tagged-txs)
-    (hr)
-    (h5 "Tags")
-    (tag-debug :from tags)))))
+   (header
+    :class "grid-header"
+    (h1 "Fin"))
+
+   (div
+    :class "grid-content"
+    (p "Choose a CSV file")
+    (input :type "file" :accept ".csv" :change csv/put-upload)
+
+    (summaries :from summed-txs)
+    (transaction-list :tagged-txs tagged-txs :tags tags)
+
+    (cond-tpl
+     debug
+     (div
+      :class "debug"
+      (hr)
+      (h5 "DB + tags")
+      (tag-debug :from tagged-txs)
+      (hr)
+      (h5 "Tags")
+      (tag-debug :from tags)))
+
+    (footer
+     :class "grid-footer"
+     (span "Made with heart emoji by opyate."))
+    ))))

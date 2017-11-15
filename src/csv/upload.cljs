@@ -21,6 +21,7 @@
 (defn put-upload [e]
   (put! upload-reqs e))
 
+;; channel-based architecture credits https://mrmcc3.github.io/post/csv-with-clojurescript/
 ;; a loop to write to file-reads
 (go-loop []
   (let [reader (js/FileReader.)
