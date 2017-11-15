@@ -41,7 +41,13 @@
 (defn put [payload fn]
     (idxdb/add-item db store-txs payload fn fn))
 
-(defn load-into [transactions]
+(defn ^:private load [into-coll store]
   (go
-    (doseq [tx (<! (idxdb/get-all-from db store-txs 1 :keywordize-keys true))]
-      (swap! transactions conj tx))))
+    (doseq [tx (<! (idxdb/get-all-from db store 1 :keywordize-keys true))]
+      (swap! into-coll conj tx))))
+
+(defn load-txs [into-coll]
+  (load into-coll store-txs))
+
+(defn load-tags [into-coll]
+  (load into-coll store-tags))

@@ -28,7 +28,9 @@
                        {:tag k :sum (reduce + (map #(-> % :amount js/parseFloat) v))}))
                    (group-by :tag tagged-txs)))
 
-(defn load [] (dao/load-into transactions))
+(defn load []
+  (dao/load-txs transactions)
+  (dao/load-tags tags))
 
 (html
  (head
