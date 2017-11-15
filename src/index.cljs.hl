@@ -24,6 +24,9 @@
 (defn load []
   (dao/load-txs transactions)
   (dao/load-tags tags))
+(load)
+
+(defc debug false)
 
 (html
  (head
@@ -32,14 +35,16 @@
   (h1 "Fin")
   (p "Choose a CSV file")
   (input :type "file" :accept ".csv" :change csv/put-upload)
-  (button :click load "Read")
+  #_ (button :click load "Read")
 
   (summaries :from summed-txs)
   (transaction-list :tagged-txs tagged-txs :tags tags)
-  (hr)
-  (h5 "DB + tags")
-  (tag-debug :from tagged-txs)
-  (hr)
-  (h5 "Tags")
-  (tag-debug :from tags)
-  ))
+  (cond-tpl
+   debug
+   (div
+    (hr)
+    (h5 "DB + tags")
+    (tag-debug :from tagged-txs)
+    (hr)
+    (h5 "Tags")
+    (tag-debug :from tags)))))
