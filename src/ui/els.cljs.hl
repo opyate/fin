@@ -15,32 +15,39 @@
         tag (cell= (:tag tx))
         new-tag (cell "")
         parsed      (cell= (parse-tag new-tag))]
-    (span :class "tx"
-          (cond-tpl tag
-                    (span tag)
-                    :else
-                    (span
-                     (input
-                      :value new-tag
-                      :input #(reset! new-tag @%)
-                      )
-                     (button
-                      :click #(when-let [parsed-tag @parsed]
-                                (dosync
-                                 (let [payload {:key @description :tag @parsed}]
-                                   (swap! tags conj payload)
-                                   (dao/put-tag payload dao/debug-fn))
-                                 (reset! new-tag "")))
-                      :disabled (cell= (not parsed))
-                      "+")))
-          (em date)
-          (span description)
-          (strong amount)
-          )))
+    (tr
+     (cond-tpl
+      tag (td tag)
+      :else
+      (td
+       (input
+        :value new-tag
+        :input #(reset! new-tag @%)
+        )
+       (button
+        :click #(when-let [parsed-tag @parsed]
+                  (dosync
+                   (let [payload {:key @description :tag @parsed}]
+                     (swap! tags conj payload)
+                     (dao/put-tag payload dao/debug-fn))
+                   (reset! new-tag "")))
+        :disabled (cell= (not parsed))
+        "+")))
+     (td date)
+     (td description)
+     (td amount)
+     (td
+      ;; (button :click #(swap! tagged-txs disj @tagged-tx) "Delete")
+      "button?"
+      ))))
 (defelem transaction-list [{:keys [tagged-txs tags]}]
-  (ol
-   (for-tpl [
-             tagged-tx tagged-txs]
-            (li
-             (span (render-tx :tx tagged-tx :tags tags))
-             (button :click #(swap! tagged-txs disj @tagged-tx) "Delete")))))
+  (table
+   (thead
+    (tr
+     (td "Tag")
+     (td "Date")
+     (td "Description")
+     (td "Amount")
+     (td "")))
+   (for-tpl [tagged-tx tagged-txs]
+            (render-tx :tx tagged-tx :tags tags))))
