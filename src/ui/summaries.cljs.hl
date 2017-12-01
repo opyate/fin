@@ -3,13 +3,19 @@
 (defelem render [{:keys [from]}]
   (let [tag (cell= (:tag from))
         sum (cell= (:sum from))]
-    (div
-     (span tag)
-     (span sum))))
+    (tr
+     (td :class tag tag)
+     (td sum))))
 
 (defelem summaries [{:keys [from]}]
-  (ol
-   (for-tpl [it from]
-            (li
+  (div
+   :class "summary"
+   (h2 "Summary")
+   (table
+    (thead
+     (tr
+      (td "Tag")
+      (td "Total")))
+    (for-tpl [it from]
              (render :from it)))))
 

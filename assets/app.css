@@ -11,6 +11,16 @@ h1 {
     background-color: #FFF755;
 }
 
+thead {
+    font-weight: bold;
+}
+
+/* tag colours */
+
+.utilities {
+    color: red;
+}
+
 /* CSS Grid */
 
 .grid-head {

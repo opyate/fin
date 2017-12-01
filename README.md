@@ -1,6 +1,13 @@
-# hoplon-starter-project
+# Personal/household finance
 
-A [Hoplon][3] project designed to...well, that part is up to you.
+You upload a bank statement CSV ([example](example.csv)), tag transactions (e.g. utilities, mortgage), and then you can analyse which tags sucks up the most of your income.
+
+Uses [Hoplon][3] for spreadsheet magic.
+
+# TODO
+
+- tags CSS don't work well
+- show summary by month
 
 ## Dependencies
 
@@ -35,7 +42,7 @@ A [Hoplon][3] project designed to...well, that part is up to you.
 
 ## License
 
-Copyright © 2017, **Your Name Goes Here**
+Copyright © 2017, Juan M Uys
 
 [1]: http://boot-clj.com
 [2]: http://localhost:8000

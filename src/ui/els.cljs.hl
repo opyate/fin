@@ -1,5 +1,6 @@
 (ns ui.els
-  (:require [db.dao :as dao]))
+  (:require [db.dao :as dao]
+             [clojure.string :as string]))
 (defn parse-tag [tag]
   tag)
 
@@ -8,16 +9,17 @@
    (for-tpl [tag-pair from]
             (li (cell= (str tag-pair))))))
 (defelem render-tx [{:keys [tx tags]}]
-  (let [
+  (let [id (cell= (string/replace (str tx) #"[^a-zA-Z0-9]" ""))
         amount (cell= (:amount tx))
         description (cell= (:description tx))
         date (cell= (:date tx))
         tag (cell= (:tag tx))
         new-tag (cell "")
-        parsed      (cell= (parse-tag new-tag))]
+        parsed (cell= (parse-tag new-tag))]
     (tr
      (cond-tpl
-      tag (td tag)
+      ;;tag (td :class (cell= (str tag "-class")) (span tag))
+      tag (td :id id :class tag (span tag))
       :else
       (td
        (input
@@ -41,13 +43,16 @@
       "button?"
       ))))
 (defelem transaction-list [{:keys [tagged-txs tags]}]
-  (table
-   (thead
-    (tr
-     (td "Tag")
-     (td "Date")
-     (td "Description")
-     (td "Amount")
-     (td "")))
-   (for-tpl [tagged-tx tagged-txs]
-            (render-tx :tx tagged-tx :tags tags))))
+  (div
+   :class "transactions"
+   (h2 "Transactions")
+   (table
+    (thead
+     (tr
+      (td "Tag")
+      (td "Date")
+      (td "Description")
+      (td "Amount")
+      (td "")))
+    (for-tpl [tagged-tx tagged-txs]
+             (render-tx :tx tagged-tx :tags tags)))))

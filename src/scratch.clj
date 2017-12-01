@@ -82,3 +82,17 @@ summed-txs
 
 (for [tag things]
   (println "tag " tag))
+
+
+(defn normalize-class
+  "Public helper.
+  Class normalization for attribute providers."
+  [kvs]
+  (let [->map #(zipmap % (repeat true))]
+    (if (map? kvs)
+      kvs
+      (->map (if (string? kvs) (.split kvs #"\s+") (seq kvs))))))
+
+(clojure.string/replace "a b - c" "-" "")
+
+(normalize-class "a b")
