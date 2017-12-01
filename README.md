@@ -8,6 +8,7 @@ Uses [Hoplon][3] for spreadsheet magic.
 
 - tags CSS don't work well
 - show summary by month
+- handle more CSV orientations (sniff headers?)
 
 ## Dependencies
 
